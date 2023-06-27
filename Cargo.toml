@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "cli",
     "game"
 ]
 
@@ -11,11 +12,3 @@ authors = [ "Olexandr Koval <kovalidis@gmail.com>" ]
 
 [workspace.dependencies]
 anyhow = "1.0.71"
-
-[package]
-name = "puzzle_15"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-
-[dependencies]
