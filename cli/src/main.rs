@@ -9,7 +9,10 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rand::rngs::ThreadRng;
 
-fn display_board(output: &mut impl Write, board: &Board) -> anyhow::Result<()> {
+fn display_board(
+    output: &mut impl Write,
+    board: &Board,
+) -> anyhow::Result<()> {
     for row in board.rows() {
         for cell in row {
             if let Some(cell_val) = cell {
@@ -49,7 +52,11 @@ fn parse_cmd(s: &str) -> Cmd {
     Cmd::Moves(moves)
 }
 
-fn run(mut input: impl BufRead, mut output: impl Write, shuffle: &mut BoardShuffle) -> anyhow::Result<()> {
+fn run(
+    mut input: impl BufRead,
+    mut output: impl Write,
+    shuffle: &mut BoardShuffle,
+) -> anyhow::Result<()> {
     let mut board = Board::new(4, shuffle)?;
     display_board(&mut output, &board)?;
 
