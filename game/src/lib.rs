@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 use std::num::NonZeroU16;
 
+pub type BoardShuffle = dyn Shuffle<Item=Option<NonZeroU16>>;
+
 pub trait Shuffle {
     type Item;
 
@@ -33,14 +35,15 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new(size: u8, shuffler: &mut impl Shuffle<Item=Option<NonZeroU16>>) -> anyhow::Result<Self> {
+    pub fn new(size: u8, shuffler: &mut BoardShuffle) -> anyhow::Result<Self> {
         let num_cells = (size as u16) * (size as u16);
         let mut cells = (0..num_cells).map(NonZeroU16::new).collect();
         shuffler.shuffle(&mut cells);
+        let free_cell_ix = cells.iter().position(|cell| cell.is_none()).expect("free cell");
         Ok(Self {
             cells,
             size,
-            free_cell_ix: 0,
+            free_cell_ix,
         })
     }
 
