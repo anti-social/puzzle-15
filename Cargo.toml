@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "cli",
-    "game"
+    "game",
+    "web"
 ]
 
 [workspace.package]

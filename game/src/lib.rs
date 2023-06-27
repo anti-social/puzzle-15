@@ -28,6 +28,7 @@ pub enum Move {
     Down,
 }
 
+#[derive(PartialEq)]
 pub struct Board {
     cells: Vec<Option<NonZeroU16>>,
     size: u8,

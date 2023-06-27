@@ -16,3 +16,7 @@ cargo run -- --no-shuffle
 ```sh
 cargo test
 ```
+
+## Try it in your browser
+
+https://anti-social.github.io/puzzle-15/
