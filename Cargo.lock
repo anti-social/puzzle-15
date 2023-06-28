@@ -319,6 +319,7 @@ name = "game"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "rand",
 ]
 
 [[package]]

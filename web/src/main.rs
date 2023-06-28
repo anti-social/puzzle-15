@@ -1,34 +1,12 @@
-use std::marker::PhantomData;
 use std::num::NonZeroU16;
 
-use game::{Board, Move, Shuffle};
+use game::{Board, RandomShuffle, Move};
 
 use gloo::events::EventListener;
-
-use rand::prelude::*;
 
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 
 use yew::prelude::*;
-
-struct RandomShuffle<T> {
-    rng: ThreadRng,
-    _marker: PhantomData<T>,
-}
-
-impl<T> RandomShuffle<T> {
-    fn new(rng: ThreadRng) -> Self {
-        Self { rng, _marker: PhantomData::default() }
-    }
-}
-
-impl<T> Shuffle for RandomShuffle<T> {
-    type Item = T;
-
-    fn shuffle(&mut self, data: &mut Vec<Self::Item>) {
-        data.shuffle(&mut self.rng)
-    }
-}
 
 #[function_component]
 fn App() -> Html {

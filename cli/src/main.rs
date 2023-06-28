@@ -1,13 +1,8 @@
 use std::io::{self, BufRead, Write};
-use std::marker::PhantomData;
 
 use clap::{arg, command, Parser};
 
-use game::{Board, BoardShuffle, DummyShuffle, Move, Shuffle};
-
-use rand::seq::SliceRandom;
-use rand::thread_rng;
-use rand::rngs::ThreadRng;
+use game::{Board, BoardShuffle, DummyShuffle, Move, RandomShuffle};
 
 fn display_board(
     output: &mut impl Write,
@@ -55,7 +50,7 @@ fn parse_cmd(s: &str) -> Cmd {
 fn run(
     mut input: impl BufRead,
     mut output: impl Write,
-    shuffle: &mut BoardShuffle,
+    shuffle: &mut dyn BoardShuffle,
 ) -> anyhow::Result<()> {
     let mut board = Board::new(4, shuffle)?;
     display_board(&mut output, &board)?;
@@ -80,25 +75,6 @@ fn run(
     }
 }
 
-struct RandomShuffle<T> {
-    rng: ThreadRng,
-    _marker: PhantomData<T>,
-}
-
-impl<T> RandomShuffle<T> {
-    fn new(rng: ThreadRng) -> Self {
-        Self { rng, _marker: PhantomData::default() }
-    }
-}
-
-impl<T> Shuffle for RandomShuffle<T> {
-    type Item = T;
-
-    fn shuffle(&mut self, data: &mut Vec<Self::Item>) {
-        data.shuffle(&mut self.rng)
-    }
-}
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -108,10 +84,10 @@ struct Args {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    let mut shuffle: Box<BoardShuffle> = if args.no_shuffle {
-        Box::new(DummyShuffle::default())
+    let mut shuffle: Box<dyn BoardShuffle> = if args.no_shuffle {
+        Box::new(DummyShuffle)
     } else {
-        let rng = thread_rng();
+        let rng = rand::thread_rng();
         Box::new(RandomShuffle::new(rng))
     };
     let input = io::stdin().lock();
@@ -128,15 +104,15 @@ mod tests {
     fn test_display_board() -> anyhow::Result<()> {
         let mut output = vec!();
 
-        let board = Board::new(4, &mut DummyShuffle::default())?;
+        let board = Board::new(4, &mut DummyShuffle)?;
         display_board(&mut output, &board)?;
 
         similar_asserts::assert_eq!(
             String::from_utf8(output)?,
-            "       1   2   3\n\n   \
-            4   5   6   7\n\n   \
-            8   9  10  11\n\n  \
-            12  13  14  15\n\n"
+            "   1   2   3   4\n\n   \
+            5   6   7   8\n\n   \
+            9  10  11  12\n\n  \
+            13  14  15    \n\n"
         );
 
         Ok(())
@@ -144,22 +120,22 @@ mod tests {
 
     #[test]
     fn test_run() -> anyhow::Result<()> {
-        let input = b"aaw\nq\n";
+        let input = b"dds\nq\n";
         let mut output = vec!();
 
-        run(&input[..], &mut output, &mut DummyShuffle::default())?;
+        run(&input[..], &mut output, &mut DummyShuffle)?;
 
         similar_asserts::assert_eq!(
             String::from_utf8(output)?,
-            "       1   2   3\n\n   \
-            4   5   6   7\n\n   \
-            8   9  10  11\n\n  \
-            12  13  14  15\n\n\
+            "   1   2   3   4\n\n   \
+            5   6   7   8\n\n   \
+            9  10  11  12\n\n  \
+            13  14  15    \n\n\
             Slide into direction [w, a, s, d], q - for quit:    \
-            1   2   6   3\n\n   \
-            4   5       7\n\n   \
-            8   9  10  11\n\n  \
-            12  13  14  15\n\n\
+            1   2   3   4\n\n   \
+            5   6   7   8\n\n   \
+            9      11  12\n\n  \
+            13  10  14  15\n\n\
             Slide into direction [w, a, s, d], q - for quit: "
         );
 
@@ -168,22 +144,22 @@ mod tests {
 
     #[test]
     fn test_run_solved() -> anyhow::Result<()> {
-        let input = b"ad\nq\n";
+        let input = b"da\nq\n";
         let mut output = vec!();
 
-        run(&input[..], &mut output, &mut DummyShuffle::default())?;
+        run(&input[..], &mut output, &mut DummyShuffle)?;
 
         similar_asserts::assert_eq!(
             String::from_utf8(output)?,
-            "       1   2   3\n\n   \
-            4   5   6   7\n\n   \
-            8   9  10  11\n\n  \
-            12  13  14  15\n\n\
-            Slide into direction [w, a, s, d], q - for quit:        \
-            1   2   3\n\n   \
-            4   5   6   7\n\n   \
-            8   9  10  11\n\n  \
-            12  13  14  15\n\n\
+            "   1   2   3   4\n\n   \
+            5   6   7   8\n\n   \
+            9  10  11  12\n\n  \
+            13  14  15    \n\n\
+            Slide into direction [w, a, s, d], q - for quit:    \
+            1   2   3   4\n\n   \
+            5   6   7   8\n\n   \
+            9  10  11  12\n\n  \
+            13  14  15    \n\n\
             Puzzle is solved!\n\n\
             Slide into direction [w, a, s, d], q - for quit: "
         );
