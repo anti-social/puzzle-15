@@ -56,7 +56,7 @@ impl Board {
         self.size
     }
 
-    pub fn move_once(&mut self, mv: Move) {
+    pub fn move_once(&mut self, mv: Move) -> bool {
         // println!("Moving {mv:?}");
         use Move ::*;
 
@@ -67,13 +67,13 @@ impl Board {
             Left => {
                 let next_ix = free_cell_ix + 1;
                 if next_ix % self.size as isize == 0 {
-                    return;
+                    return false;
                 }
                 next_ix
             }
             Right => {
                 if free_cell_ix % self.size as isize == 0 {
-                    return;
+                    return false;
                 }
                 free_cell_ix - 1
             }
@@ -81,17 +81,23 @@ impl Board {
             Down => free_cell_ix - size,
         };
         if target_cell_ix < 0 || target_cell_ix >= self.cells.len() as isize {
-            return;
+            return false;
         }
         // println!("Swapping {free_cell_ix} <-> {target_cell_ix}");
         self.cells.swap(self.free_cell_ix, target_cell_ix as usize);
         self.free_cell_ix = target_cell_ix as usize;
+
+        true
     }
 
-    pub fn move_many(&mut self, moves: &[Move]) {
+    pub fn move_many(&mut self, moves: &[Move]) -> usize {
+        let mut successful_moves = 0;
         for &mv in moves {
-            self.move_once(mv);
+            if self.move_once(mv) {
+                successful_moves += 1;
+            }
         }
+        successful_moves
     }
 
     pub fn rows(&self) -> Vec<&[Option<NonZeroU16>]> {

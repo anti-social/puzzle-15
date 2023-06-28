@@ -71,10 +71,11 @@ fn App() -> Html {
                     _ => None,
                 };
                 if let Some(mv) = mv {
-                    board.borrow_mut().move_once(mv);
-                    rows.set(board.borrow().rows().iter().map(|row| row.to_vec()).collect());
-                    is_ordered.set(board.borrow().is_ordered());
-                    moves.set(*moves + 1)
+                    if board.borrow_mut().move_once(mv) {
+                        rows.set(board.borrow().rows().iter().map(|row| row.to_vec()).collect());
+                        is_ordered.set(board.borrow().is_ordered());
+                        moves.set(*moves + 1);
+                    }
                 }
             });
 
@@ -87,7 +88,7 @@ fn App() -> Html {
     html! {
         <div style="width: 400px; margin: auto">
             <h1>
-                { "Puzzle 15 game" }
+                { "Puzzle 15 game (use arrow keys for control)" }
             </h1>
             <h2>
                 if *is_ordered {
