@@ -11,29 +11,12 @@ use yew::prelude::*;
 #[function_component]
 fn App() -> Html {
     let rng = rand::thread_rng();
-    let mut shuffle = RandomShuffle::new(rng);
-    let board = use_mut_ref(|| Board::new(4, &mut shuffle).unwrap());
-    let rows = {
-        let board = board.clone();
-        use_state(move || {
-            board.borrow().rows()
-                .iter()
-                .map(|row| row.to_vec())
-                .collect::<Vec<_>>()
-        })
-    };
-    let is_solved = {
-        let board = board.clone();
-        use_state(move || {
-            board.borrow().is_solved()
-        })
-    };
+    let shuffle = use_mut_ref(|| RandomShuffle::new(rng));
+    let board = use_mut_ref(|| Board::new(4, &mut *shuffle.borrow_mut()));
     let moves = use_state(|| 0);
 
     {
         let board = board.clone();
-        let rows = rows.clone();
-        let is_solved = is_solved.clone();
         let moves = moves.clone();
         use_effect(move || {
             let document = gloo::utils::document();
@@ -41,7 +24,8 @@ fn App() -> Html {
                 let event = event.dyn_ref::<web_sys::KeyboardEvent>().unwrap_throw();
                 // log::warn!("Key pressed: {:?}", event.key());
 
-                if *is_solved {
+                let mut board = board.borrow_mut();
+                if board.is_solved() {
                     return;
                 }
 
@@ -53,9 +37,7 @@ fn App() -> Html {
                     _ => None,
                 };
                 if let Some(mv) = mv {
-                    if board.borrow_mut().move_once(mv) {
-                        rows.set(board.borrow().rows().iter().map(|row| row.to_vec()).collect());
-                        is_solved.set(board.borrow().is_solved());
+                    if board.move_once(mv) {
                         moves.set(*moves + 1);
                     }
                 }
@@ -67,33 +49,53 @@ fn App() -> Html {
         });
     }
 
-    html! {
-        <div style="width: 400px; margin: auto">
-            <h1>
-                { "Puzzle 15 game" }
-            </h1>
-            <h2>
-                if *is_solved {
-                    { format!("Puzzle solved for {} moves", *moves) }
-                } else {
-                    { format!("{} moves", *moves) }
-                }
-            </h2>
-            <div style="width: 400px; height: 400px; font-size: 40pt">
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); grid-gap: 5px">
-                    {
-                        rows.iter()
-                            .map(|row| html! {
-                                <GameBoardRow row={ row.to_vec() }/>
-                            })
-                            .collect::<Html>()
+    let restart_game = {
+        let board = board.clone();
+        let shuffle = shuffle.clone();
+        let moves = moves.clone();
+        Callback::from(
+            move |_| {
+                board.borrow_mut().reset(&mut *shuffle.borrow_mut());
+                moves.set(0);
+            }
+        )
+    };
+
+    {
+        let board = board.borrow();
+        html! {
+            <div style="width: 400px; margin: auto">
+                <h1>
+                    { "Puzzle 15 game" }
+                </h1>
+                <h2>
+                    if board.is_solved() {
+                        { format!("Puzzle solved for {} moves", *moves) }
+                    } else {
+                        { format!("{} moves", *moves) }
                     }
+                </h2>
+                <div style="width: 400px; height: 400px; font-size: 40pt">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); grid-gap: 5px">
+                        {
+                            board.rows().iter()
+                                .map(|row| html! {
+                                    <GameBoardRow row={ row.to_vec() }/>
+                                })
+                                .collect::<Html>()
+                        }
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 3fr 1fr">
+                    <p style="font-size: 0.9em; color: dimgrey">
+                        { "Use arrow keys for control" }
+                    </p>
+                    <button onclick={ restart_game }>
+                        { "New game" }
+                    </button>
                 </div>
             </div>
-            <p style="font-size: 0.9em; color: dimgrey">
-                { "Use arrow keys for control" }
-            </p>
-        </div>
+        }
     }
 }
 

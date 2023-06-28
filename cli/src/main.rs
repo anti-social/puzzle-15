@@ -52,7 +52,7 @@ fn run(
     mut output: impl Write,
     shuffle: &mut dyn BoardShuffle,
 ) -> anyhow::Result<()> {
-    let mut board = Board::new(4, shuffle)?;
+    let mut board = Board::new(4, shuffle);
     display_board(&mut output, &board)?;
 
     let mut input_buf = String::new();

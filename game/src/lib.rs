@@ -55,7 +55,7 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new(size: u8, shuffler: &mut dyn BoardShuffle) -> anyhow::Result<Self> {
+    pub fn new(size: u8, shuffler: &mut dyn BoardShuffle) -> Self {
         let num_cells = (size as u16) * (size as u16);
         let cells = (1..num_cells).chain(0..1).map(NonZeroU16::new).collect::<Vec<_>>();
         let free_cell_ix = cells.len() - 1;
@@ -65,7 +65,11 @@ impl Board {
             free_cell_ix,
         };
         shuffler.shuffle(&mut board);
-        Ok(board)
+        board
+    }
+
+    pub fn reset(&mut self, shuffler: &mut dyn BoardShuffle) {
+        shuffler.shuffle(self)
     }
 
     pub fn get(&self, row: u8, col: u8) -> Option<NonZeroU16> {
