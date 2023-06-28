@@ -19,7 +19,9 @@ pub trait BoardShuffle {
 pub struct DummyShuffle;
 
 impl BoardShuffle for DummyShuffle {
-    fn shuffle(&mut self, _board: &mut Board) {}
+    fn shuffle(&mut self, board: &mut Board) {
+        board.move_once(Move::Right);
+    }
 }
 
 pub struct RandomShuffle {
@@ -134,21 +136,14 @@ impl Board {
             .collect()
     }
 
-    pub fn is_ordered(&self) -> bool {
-        let mut prev_cell = None;
-        for cell in self.cells.iter() {
-            match (cell, prev_cell) {
-                (Some(cell_val), Some(prev_cell_val)) => {
-                    if cell_val <= prev_cell_val {
-                        return false;
-                    } else {
-                        prev_cell = Some(cell_val);
-                    }
+    pub fn is_solved(&self) -> bool {
+        for (ix, cell) in self.cells.iter().take(self.cells.len() - 1).enumerate() {
+            if let Some(cell_val) = cell {
+                if cell_val.get() != ix as u16 + 1 {
+                    return false;
                 }
-                (None, _) => continue,
-                (Some(_), None) => {
-                    prev_cell = cell.as_ref();
-                }
+            } else {
+                return false;
             }
         }
         true
@@ -165,47 +160,52 @@ mod tests {
         let mut board = Board::new(1, &mut DummyShuffle).expect("board");
         assert_eq!(board.size(), 1);
         assert_eq!(&board.to_rows(), &[&[None]]);
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
 
         board.move_once(Move::Left);
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
         board.move_once(Move::Right);
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
         board.move_once(Move::Up);
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
         board.move_once(Move::Down);
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
     }
 
     #[test]
     fn board_4x4() {
         let mut board = Board::new(4, &mut DummyShuffle).expect("board");
         assert_eq!(board.size(), 4);
+        assert_eq!(
+            &board.to_rows(),
+            &[
+                &[1.into(), 2.into(), 3.into(), 4.into()],
+                &[5.into(), 6.into(), 7.into(), 8.into()],
+                &[9.into(), 10.into(), 11.into(), 12.into()],
+                &[13.into(), 14.into(), None, 15.into()],
+            ]
+        );
+        assert!(!board.is_solved());
+
         let expected_rows = &[
             &[1.into(), 2.into(), 3.into(), 4.into()],
             &[5.into(), 6.into(), 7.into(), 8.into()],
             &[9.into(), 10.into(), 11.into(), 12.into()],
             &[13.into(), 14.into(), 15.into(), None],
         ];
-        assert_eq!(
-            &board.to_rows(),
-            expected_rows
-        );
-        assert!(board.is_ordered());
-
         board.move_once(Move::Left);
         assert_eq!(
             &board.to_rows(),
             expected_rows
         );
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
 
         board.move_once(Move::Up);
         assert_eq!(
             &board.to_rows(),
             expected_rows
         );
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
 
         board.move_once(Move::Right);
         assert_eq!(
@@ -217,7 +217,7 @@ mod tests {
                 &[13.into(), 14.into(), None, 15.into()],
             ]
         );
-        assert!(board.is_ordered());
+        assert!(!board.is_solved());
 
         // Check not crossing left border
         board.move_many(&[Move::Right, Move::Right, Move::Right]);
@@ -230,7 +230,7 @@ mod tests {
                 &[None, 13.into(), 14.into(), 15.into()],
             ]
         );
-        assert!(board.is_ordered());
+        assert!(!board.is_solved());
 
         board.move_many(&[
             Move::Left, Move::Left, Move::Down, Move::Down, Move::Down, Move::Right, Move::Right
@@ -244,7 +244,7 @@ mod tests {
                 &[13.into(), 14.into(), 11.into(), 15.into()],
             ]
         );
-        assert!(!board.is_ordered());
+        assert!(!board.is_solved());
 
         board.move_many(&[Move::Left, Move::Left, Move::Up, Move::Up, Move::Left]);
         assert_eq!(
@@ -256,7 +256,7 @@ mod tests {
                 &[13.into(), 14.into(), 11.into(), 15.into()],
             ]
         );
-        assert!(!board.is_ordered());
+        assert!(!board.is_solved());
 
         // Check not crossing right border
         board.move_once(Move::Left);
@@ -269,7 +269,7 @@ mod tests {
                 &[13.into(), 14.into(), 11.into(), 15.into()],
             ]
         );
-        assert!(!board.is_ordered());
+        assert!(!board.is_solved());
 
         board.move_many(&[Move::Right, Move::Up, Move::Left]);
         assert_eq!(
@@ -281,7 +281,7 @@ mod tests {
                 &[13.into(), 14.into(), 15.into(), None],
             ]
         );
-        assert!(board.is_ordered());
+        assert!(board.is_solved());
     }
 
     #[test]
@@ -293,8 +293,8 @@ mod tests {
         assert_eq!(board.get(0, 254), NonZeroU16::new(255));
         assert_eq!(board.get(1, 0), NonZeroU16::new(256));
         assert_eq!(board.get(2, 0), NonZeroU16::new(511));
-        assert_eq!(board.get(254, 253), NonZeroU16::new(65024));
-        assert_eq!(board.get(254, 254), None);
-        assert!(board.is_ordered());
+        assert_eq!(board.get(254, 253), None);
+        assert_eq!(board.get(254, 254), NonZeroU16::new(65024));
+        assert!(!board.is_solved());
     }
 }

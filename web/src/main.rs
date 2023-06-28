@@ -22,10 +22,10 @@ fn App() -> Html {
                 .collect::<Vec<_>>()
         })
     };
-    let is_ordered = {
+    let is_solved = {
         let board = board.clone();
         use_state(move || {
-            board.borrow().is_ordered()
+            board.borrow().is_solved()
         })
     };
     let moves = use_state(|| 0);
@@ -33,13 +33,17 @@ fn App() -> Html {
     {
         let board = board.clone();
         let rows = rows.clone();
-        let is_ordered = is_ordered.clone();
+        let is_solved = is_solved.clone();
         let moves = moves.clone();
         use_effect(move || {
             let document = gloo::utils::document();
             let listener = EventListener::new(&document, "keydown", move |event| {
                 let event = event.dyn_ref::<web_sys::KeyboardEvent>().unwrap_throw();
                 // log::warn!("Key pressed: {:?}", event.key());
+
+                if *is_solved {
+                    return;
+                }
 
                 let mv = match event.key().as_str() {
                     "ArrowLeft" => Some(Move::Left),
@@ -51,7 +55,7 @@ fn App() -> Html {
                 if let Some(mv) = mv {
                     if board.borrow_mut().move_once(mv) {
                         rows.set(board.borrow().rows().iter().map(|row| row.to_vec()).collect());
-                        is_ordered.set(board.borrow().is_ordered());
+                        is_solved.set(board.borrow().is_solved());
                         moves.set(*moves + 1);
                     }
                 }
@@ -69,7 +73,7 @@ fn App() -> Html {
                 { "Puzzle 15 game" }
             </h1>
             <h2>
-                if *is_ordered {
+                if *is_solved {
                     { format!("Puzzle solved for {} moves", *moves) }
                 } else {
                     { format!("{} moves", *moves) }

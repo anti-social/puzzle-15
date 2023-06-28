@@ -68,7 +68,7 @@ fn run(
             Cmd::Quit => return Ok(()),
         }
         display_board(&mut output, &board)?;
-        if board.is_ordered() {
+        if board.is_solved() {
             writeln!(output, "Puzzle is solved!\n")?;
         }
         input_buf.clear();
@@ -112,7 +112,7 @@ mod tests {
             "   1   2   3   4\n\n   \
             5   6   7   8\n\n   \
             9  10  11  12\n\n  \
-            13  14  15    \n\n"
+            13  14      15\n\n"
         );
 
         Ok(())
@@ -130,12 +130,12 @@ mod tests {
             "   1   2   3   4\n\n   \
             5   6   7   8\n\n   \
             9  10  11  12\n\n  \
-            13  14  15    \n\n\
+            13  14      15\n\n\
             Slide into direction [w, a, s, d], q - for quit:    \
             1   2   3   4\n\n   \
-            5   6   7   8\n\n   \
-            9      11  12\n\n  \
-            13  10  14  15\n\n\
+            5   6   7   8\n\n      \
+               10  11  12\n\n   \
+            9  13  14  15\n\n\
             Slide into direction [w, a, s, d], q - for quit: "
         );
 
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_run_solved() -> anyhow::Result<()> {
-        let input = b"da\nq\n";
+        let input = b"a\nq\n";
         let mut output = vec!();
 
         run(&input[..], &mut output, &mut DummyShuffle)?;
@@ -154,7 +154,7 @@ mod tests {
             "   1   2   3   4\n\n   \
             5   6   7   8\n\n   \
             9  10  11  12\n\n  \
-            13  14  15    \n\n\
+            13  14      15\n\n\
             Slide into direction [w, a, s, d], q - for quit:    \
             1   2   3   4\n\n   \
             5   6   7   8\n\n   \
