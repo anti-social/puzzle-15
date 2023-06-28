@@ -88,7 +88,7 @@ fn App() -> Html {
     html! {
         <div style="width: 400px; margin: auto">
             <h1>
-                { "Puzzle 15 game (use arrow keys for control)" }
+                { "Puzzle 15 game" }
             </h1>
             <h2>
                 if *is_ordered {
@@ -108,6 +108,9 @@ fn App() -> Html {
                     }
                 </div>
             </div>
+            <p style="font-size: 0.9em; color: dimgrey">
+                { "Use arrow keys for control" }
+            </p>
         </div>
     }
 }
