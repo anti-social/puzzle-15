@@ -142,7 +142,7 @@ fn App() -> Html {
     {
         let board = board.borrow();
         html! {
-            <div style="width: 400px; margin: auto">
+            <div style="width: 600px; margin: auto">
                 <h1>
                     { "Puzzle 15 game" }
                 </h1>
@@ -153,7 +153,7 @@ fn App() -> Html {
                         { format!("{} moves", *moves) }
                     }
                 </h2>
-                <div style="width: 400px; height: 400px; font-size: 40pt">
+                <div style="width: 560px; height: 600px; font-size: 60pt">
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); grid-gap: 5px">
                         {
                             board.rows().iter()
@@ -188,7 +188,7 @@ fn GameBoardRow(props: &GameBoardRowProps) -> Html {
 
     row.iter()
        .map(|cell| html! {
-           <div style="width: 90px; height: 90px; text-align: center; border: 1px solid orange">
+           <div style="display: flex; flex-direction: column; justify-content: center; width: 135px; height: 135px; text-align: center; border: 2px solid orange">
                { format!("{}", cell.map_or("".to_string(), |v| v.to_string())) }
            </div>
        })
